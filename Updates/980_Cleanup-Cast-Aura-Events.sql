@@ -16,3 +16,8 @@ INSERT INTO `creature_template_addon` (`entry`, `bytes1`, `b2_0_sheath`, `b2_1_f
 (768, 33554432, 1, 16, '1785'),
 (11792, 33554432, 1, 16, '1785');
 
+-- Stealth (Rank 3) 1786
+DELETE FROM `creature_template_addon` WHERE `entry` = 2434;
+INSERT INTO `creature_template_addon` (`entry`, `bytes1`, `b2_0_sheath`, `b2_1_flags`, `auras`) VALUES
+(2434, 33554432, 1, 16, '1786');
+
