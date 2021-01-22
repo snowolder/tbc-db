@@ -7,8 +7,8 @@
 ####################################################################################################
 
 # need to be changed on each official DB/CORE release
-FULLDB_FILE="TBCDB_1.6.0_RiseOfThePhoenix.sql"
-DB_TITLE="v1.6 'Rise from the Ashes'"
+FULLDB_FILE="TBCDB_1.8.0_VengeanceStrikesBack.sql"
+DB_TITLE="v1.8 'Vengeance Strikes Back'"
 NEXT_MILESTONES="0.12.4 0.13"
 
 #internal use
@@ -53,7 +53,7 @@ DB_HOST="localhost"
 DB_PORT="3306"
 
 ## Define the database in which you want to add clean TBC-DB
-DATABASE="mangos"
+DATABASE="tbcmangos"
 
 ## Define your username
 USERNAME="mangos"
@@ -63,7 +63,6 @@ PASSWORD="mangos"
 
 ## Define the path to your core's folder (This is optional)
 ##   If set the core updates located under sql/updates from this mangos-directory will be added automatically
-##   If not set, need to apply sql/base/dbc/ files manually
 CORE_PATH=""
 
 ## Define your mysql programm if this differs
@@ -154,7 +153,33 @@ if [ "$COUNT" != 0 ]
 then
   echo "  $COUNT DB updates applied successfully"
 else
-  echo "  Did not found any new DB update to apply"
+  echo "  Did not find any new DB update to apply"
+fi
+echo
+echo
+
+## Instances
+echo "> Processing instance files ..."
+COUNT=0
+for INSTANCE in "${ADDITIONAL_PATH}Updates/Instances/"[0-9]*.sql
+do
+  if [ -e "$INSTANCE" ]
+  then
+    echo "    Appending $INSTANCE"
+    $MYSQL_COMMAND < "$INSTANCE"
+    if [[ $? != 0 ]]
+    then
+      echo "ERROR: cannot apply $INSTANCE"
+      exit 1
+    fi
+    ((COUNT++))
+  fi
+done
+if [ "$COUNT" != 0 ]
+then
+  echo "  $COUNT Instance files applied successfully"
+else
+  echo "  Did not find any instance file to apply"
 fi
 echo
 echo
@@ -282,15 +307,19 @@ then
   echo
   echo
 
-  # Apply scriptdev2.sql
-  echo "> Trying to apply $CORE_PATH/sql/scriptdev2/scriptdev2.sql ..."
-  $MYSQL_COMMAND < $CORE_PATH/sql/scriptdev2/scriptdev2.sql
-  if [[ $? != 0 ]]
-  then
-    echo "ERROR: cannot apply $CORE_PATH/sql/scriptdev2/scriptdev2.sql"
-    exit 1
-  fi
-  echo "  ScriptDev2 successfully applied"
+  # Apply ScriptDev2 data
+  echo "> Trying to apply $CORE_PATH/sql/scriptdev2 ..."
+  for f in "$CORE_PATH/sql/scriptdev2/"*.sql
+  do
+    echo "    Appending SD2 file update `basename $f` to database $DATABASE"
+    $MYSQL_COMMAND < $f
+    if [[ $? != 0 ]]
+    then
+      echo "ERROR: cannot apply $f"
+      exit 1
+    fi
+  done
+  echo "  ScriptDev2 data successfully applied"
   echo
   echo
 fi
@@ -307,6 +336,21 @@ then
   exit 1
 fi
 echo "  ACID successfully applied"
+echo
+echo
+
+#
+#               CMaNGOS custom updates file
+#
+# Apply cmangos_custom.sql
+echo "> Trying to apply ${ADDITIONAL_PATH}utilities/cmangos_custom.sql ..."
+$MYSQL_COMMAND < ${ADDITIONAL_PATH}utilities/cmangos_custom.sql
+if [[ $? != 0 ]]
+then
+  echo "ERROR: cannot apply ${ADDITIONAL_PATH}utilities/cmangos_custom.sql"
+  exit 1
+fi
+echo "  CMaNGOS custom updates successfully applied"
 echo
 echo
 
